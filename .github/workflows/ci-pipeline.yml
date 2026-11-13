@@ -20,7 +20,7 @@ jobs:
       - name: 2. Configurar o ambiente Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.12'
 
       - name: 3. Instalar dependencias
         run: |
