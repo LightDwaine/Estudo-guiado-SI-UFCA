@@ -1,31 +1,24 @@
-# Usa uma imagem oficial e mais recente do Python
 FROM python:3.12-slim
 
-# Define o diretório de trabalho dentro do contêiner
 WORKDIR /app
 
-# Atualiza pacotes do sistema operacional e remove metadados antigos do setuptools do OS
-RUN apt-get update && apt-get upgrade -y \
-    && rm -rf /var/lib/apt/lists/* \
-    && rm -rf /usr/lib/python3/dist-packages/setuptools*
+# Atualiza pacotes do sistema operacional
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
-# Instala a versão mais recente do pip, setuptools (>=78.1.1) e wheel
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+# Remove metadados/pacotes antigos do setuptools (site-packages e ensurepip) e atualiza para >= 78.1.1
+RUN find /usr/local/lib/ -name "*setuptools*" -exec rm -rf {} + \
+    && pip install --no-cache-dir --upgrade pip "setuptools>=78.1.1" wheel
 
-# Copia apenas o arquivo de dependências primeiro (otimização de cache do Docker)
+# Copia apenas o arquivo de dependências primeiro
 COPY requirements.txt .
 
 # Instala as dependências da aplicação
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia o resto do código da aplicação para dentro do contêiner
+# Copia o resto do código da aplicação
 COPY . .
 
-# Define variável de ambiente para o Flask escutar em todas as interfaces dentro do contêiner
 ENV FLASK_HOST=0.0.0.0
-
-# Expõe a porta 5000 para o mundo exterior
 EXPOSE 5000
 
-# Comando para rodar a aplicação quando o contêiner iniciar
 CMD ["python", "app.py"]
