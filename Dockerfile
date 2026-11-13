@@ -4,10 +4,12 @@ FROM python:3.12-slim
 # Define o diretório de trabalho dentro do contêiner
 WORKDIR /app
 
-# Atualiza pacotes do sistema operacional para corrigir CVEs de OS (ex: openssl, zlib)
-RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+# Atualiza pacotes do sistema operacional e remove metadados antigos do setuptools do OS
+RUN apt-get update && apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /usr/lib/python3/dist-packages/setuptools*
 
-# Atualiza ferramentas base do Python (pip, setuptools, wheel) para eliminar CVEs internas
+# Instala a versão mais recente do pip, setuptools (>=78.1.1) e wheel
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # Copia apenas o arquivo de dependências primeiro (otimização de cache do Docker)
