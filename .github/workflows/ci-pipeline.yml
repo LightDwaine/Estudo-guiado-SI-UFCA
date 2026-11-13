@@ -67,7 +67,7 @@ jobs:
       # Análise Estática de Segurança (SAST)
       - name: SAST - Análise Estática com Bandit
         run: |
-            bandit -r . -lll
+            bandit -r . -ll -ii     
 
       # bandit -r . -ll -ii     
       # bandit -r . -lll
