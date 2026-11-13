@@ -1,6 +1,11 @@
+import os
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
+
+# Leitura da Feature Flag via variável de ambiente (Default: False/Desativado)
+# Permite alterar o comportamento da aplicação sem precisar de um novo deploy
+FEATURE_DESCONTO_PROMO = os.getenv("FEATURE_DESCONTO_PROMO", "false").lower() == "true"
 
 @app.route('/')
 def home():
@@ -8,19 +13,48 @@ def home():
 
 @app.route('/api/status')
 def status():
-    return jsonify({"status": "operacional", "servico": "Fastorder-Web"})
+    return jsonify({
+        "status": "operacional",
+        "servico": "FastOrder-Web",
+        "flags": {
+            "desconto_promo": FEATURE_DESCONTO_PROMO
+        }
+    })
 
-# Missão 5.1: Rota de soma recebendo parâmetros via Query String
 @app.route('/api/soma')
 def soma():
-    # Pega os parâmetros 'a' e 'b' da URL, definindo 0 como padrão se estiverem vazios
-    a = request.args.get('a', 0)
-    b = request.args.get('b', 0)
+    try:
+        a = float(request.args.get('a', 0))
+        b = float(request.args.get('b', 0))
+        return jsonify({"resultado": a + b})
+    except (ValueError, TypeError):
+        return jsonify({"erro": "Parametros invalidos"}), 400
 
-    # Converte para float (já que chegam como String) e realiza a soma
-    resultado = float(a) + float(b)
+# Nova Rota Protegida pela Feature Flag
+@app.route('/api/desconto')
+def desconto():
+    if not FEATURE_DESCONTO_PROMO:
+        return jsonify({
+            "erro": "Funcionalidade em construcao ou desativada temporariamente",
+            "flag_status": False
+        }), 403
 
-    return jsonify({"resultado": resultado})
+    try:
+        valor_total = float(request.args.get('valor', 0))
+        porcentagem = float(request.args.get('porcentagem', 10))
+        
+        if valor_total <= 0:
+            return jsonify({"erro": "Valor deve ser maior que zero"}), 400
+            
+        valor_com_desconto = valor_total - (valor_total * (porcentagem / 100))
+        
+        return jsonify({
+            "valor original": valor_total,
+            "desconto aplicado": f"{porcentagem}%",
+            "valor final": valor_com_desconto
+        })
+    except (ValueError, TypeError):
+        return jsonify({"erro": "Parametros de desconto invalidos"}), 400
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
