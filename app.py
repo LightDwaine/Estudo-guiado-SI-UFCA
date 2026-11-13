@@ -18,7 +18,7 @@ def soma():
     b = request.args.get('b', 0)
 
     # Converte para float (já que chegam como String) e realiza a soma
-    resultado = float(a) + float(b)
+    resultado = float(a) - float(b)
 
     return jsonify({"resultado": resultado})
 
